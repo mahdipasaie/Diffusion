@@ -236,7 +236,11 @@ solver = problem_define(eq1= eqdiff, eq2= eqPhi, sol_func= Sol_Func)
 
 ############################ File Section #########################
 
-def write_simulation_data(Sol_Func, time, file_path, variable_names ):
+
+file = fe.XDMFFile("Diffusion.xdmf" )
+
+
+def write_simulation_data(Sol_Func, time, file, variable_names ):
     """
     Writes the simulation data to an XDMF file. Handles an arbitrary number of variables.
 
@@ -251,34 +255,35 @@ def write_simulation_data(Sol_Func, time, file_path, variable_names ):
         The names of the variables in the order they are combined in Sol_Func.
     """
 
-    # Open the file for writing simulation data
-    with fe.XDMFFile(file_path) as file:
-        # Configure file parameters
-        file.parameters["rewrite_function_mesh"] = True
-        file.parameters["flush_output"] = True
-        file.parameters["functions_share_mesh"] = True
+    
+    # Configure file parameters
+    file.parameters["rewrite_function_mesh"] = True
+    file.parameters["flush_output"] = True
+    file.parameters["functions_share_mesh"] = True
 
-        # Split the combined function into its components
-        functions = Sol_Func.split(deepcopy=True)
+    # Split the combined function into its components
+    functions = Sol_Func.split(deepcopy=True)
 
-        # Check if the number of variable names matches the number of functions
-        if variable_names and len(variable_names) != len(functions):
-            raise ValueError("The number of variable names must match the number of functions.")
+    # Check if the number of variable names matches the number of functions
+    if variable_names and len(variable_names) != len(functions):
+        raise ValueError("The number of variable names must match the number of functions.")
 
-        # Rename and write each function to the file
-        for i, func in enumerate(functions):
-            name = variable_names[i] if variable_names else f"Variable_{i}"
-            func.rename(name, "solution")
-            file.write(func, time)
+    # Rename and write each function to the file
+    for i, func in enumerate(functions):
+        name = variable_names[i] if variable_names else f"Variable_{i}"
+        func.rename(name, "solution")
+        file.write(func, time)
+
+    file.close()
+
 
 
 T = 0
 
 variable_names = [ "U", "Phi" ]  # Adjust as needed
 
-file_path= "Diffusion.xdmf" 
 
-write_simulation_data( Sol_Func, T, file_path , variable_names=variable_names )
+write_simulation_data( Sol_Func, T, file , variable_names=variable_names )
 
 
 #############################  END  ###############################
@@ -298,7 +303,7 @@ for it in tqdm(range(0, 1000000000)):
 
     if it % 20 == 0 :
 
-        write_simulation_data( Sol_Func_0,  T , file_path , variable_names )
+        write_simulation_data( Sol_Func_0,  T , file , variable_names )
 
 
 
