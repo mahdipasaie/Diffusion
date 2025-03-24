@@ -2,6 +2,8 @@
 #include <vector>
 #include <cmath>
 #include <fstream>
+#include <sstream>  
+#include <filesystem> 
 
 
 const double dx = 0.05 ;
@@ -35,17 +37,19 @@ std::vector<std::vector<double>> apply_neumann_bc(std::vector<std::vector<double
 
 
 int main(){
+    
+    std::filesystem::create_directory("output"); 
     std::cout << "The time step is : " << dt << "  " << std::endl ;
     std::vector<std::vector<double>> Temperature(Ny, std::vector<double>(Nx, 0));
     std::vector<std::vector<double>> T_(Ny, std::vector<double>(Nx, 0));
     Temperature = initialcondition(Temperature, Nx, Ny, dx, dy, radius, T_inside, T_outside);
-    write_to_csv("temperature.csv", Temperature);
+    write_to_csv("output/temperature.csv", Temperature);
     // Boundary condition 
     Temperature = apply_neumann_bc(Temperature, flux, "left", dx, dy ) ;
     Temperature = apply_neumann_bc(Temperature, flux, "right", dx, dy ) ;
     Temperature = apply_neumann_bc(Temperature, flux, "bottom", dx, dy ) ;
     Temperature = apply_neumann_bc(Temperature, flux, "top", dx, dy ) ;
-    write_to_csv("temperature.csv", Temperature);
+    write_to_csv("output/temperature.csv", Temperature);
 
     // Time Loop:
     double Time = 0 ;
@@ -66,7 +70,9 @@ int main(){
         // update for the next time step
         Temperature = T_;
         // save the time step: 
-        write_to_csv("temperature.csv", Temperature);
+        std::ostringstream filename;
+        filename << "output/temperature_" << std::setfill('0') << std::setw(4) << it << ".csv";
+        write_to_csv(filename.str(), Temperature);
 
 
     }
